@@ -24,5 +24,6 @@ module.exports = {
         'no-console': process.env.NODE_ENV === 'production' ? 'error' : 'off',
         'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
         'no-unused-vars': 1,
+        'promise/param-names': 0
     }
 };

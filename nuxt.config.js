@@ -31,10 +31,9 @@ export default {
      ** Plugins to load before mounting the App
      */
     plugins: [
-        {
-            ssr: false,
-            src: '~/plugins/axios'
-        }
+        { src: '~plugins/axios.client.js' },
+        { src: '~plugins/object-fit-images.client.js' },
+        { src: '~plugins/vue-notification.client.js' }
     ],
     /*
      ** Nuxt.js dev-modules
@@ -72,6 +71,6 @@ export default {
                 }
             }
         },
-        extend(config, ctx) {}
+        extend(config, ctx) { }
     }
 };
