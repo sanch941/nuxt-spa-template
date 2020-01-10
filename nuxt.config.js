@@ -70,7 +70,9 @@ export default {
                     stage: 1
                 }
             }
-        },
-        extend(config, ctx) { }
+        }
+    },
+    env: {
+        dev: process.env.NODE_ENV === 'development'
     }
 };

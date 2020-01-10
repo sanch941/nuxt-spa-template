@@ -1,4 +1,4 @@
-const util = require('util');
+const { promisify } = require('util');
 const path = require('path');
 const fse = require('fs-extra');
 const sharp = require('sharp');
@@ -8,13 +8,13 @@ const glob = require('glob');
 
 const isDefault = true;
 
-const pathToImagesFolder = `${process.env.PWD}/assets/images`;
-const pathToOptimizedImagesFolder = `${process.env.PWD}/assets/images-opt`;
+const pathToImagesFolder = `${process.env.PWD}/static/images`;
+const pathToOptimizedImagesFolder = `${process.env.PWD}/static/images-opt`;
 
-const globPromise = util.promisify(glob);
+const globPromise = promisify(glob);
 
 // 1 параметр - ширина, 2 параметр - высота
-const sizesDefault = [[1920], [1600], [1366], [1024], [768], [640]];
+const sizesDefault = [[1920], [1600], [1366], [1024], [768], [640], [100]];
 
 const sizesOptional = [
     [1920, 1080],
@@ -22,10 +22,11 @@ const sizesOptional = [
     [1366, 768],
     [1024, 768],
     [768],
-    [640]
+    [640],
+    [100]
 ];
 
-const sizes = isDefault ? sizesOptional : sizesDefault;
+const sizes = isDefault ? sizesDefault : sizesOptional;
 
 const resizeImages = async () => {
     try {
@@ -52,13 +53,42 @@ const resizeImages = async () => {
                     return new Promise((resolve, reject) => {
                         // Убрать мусор из картинки и изменить ее размер
 
-                        // Создает папку с номером ширины
-                        const widthDirectory = `${pathToOptimizedImagesFolder}/${width}`;
+                        // Превращаем full path в массив чтобы потом достать инлекс слэша images и взять все что после него и до названия файлы
+                        const fullPathToArray = fullPath.split('/');
+                        const findImagesSlashIdx = fullPathToArray.findIndex(
+                            (item) => item === 'images'
+                        );
+                        const nestedDirectories = fullPathToArray
+                            .slice(
+                                findImagesSlashIdx + 1,
+                                fullPathToArray.length - 1
+                            )
+                            .join('/');
+
+                        // Создает папку с номером ширины и подпапкой если есть
+                        const widthDirectory = `${pathToOptimizedImagesFolder}/${width}/${nestedDirectories}`;
 
                         const configure = (fileType) => {
                             return new Promise((resolve2, reject2) => {
                                 const inputFile = fullPath;
+                                // sharp плохо сжимает png форматы, поэтому приходится менять png на jpg, автор sharp советует использовать Pngquant
+                                // но это доп зависимость и еще гора кода
+                                if (fileType === 'png') fileType = 'jpg';
+
                                 const outputFile = `${widthDirectory}/${filename}.${fileType}`;
+
+                                if (fileType === 'webp') {
+                                    sharp(inputFile)
+                                        .resize(width, height)
+                                        .webp({
+                                            quality: 90
+                                        })
+                                        .toFile(outputFile)
+                                        .then(() => resolve2())
+                                        .catch((err) => reject2(err));
+
+                                    return;
+                                }
 
                                 sharp(inputFile)
                                     .resize(width, height)
