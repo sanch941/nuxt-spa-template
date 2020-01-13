@@ -115,7 +115,9 @@ export default {
             // srcset должен быть динамичным и держать себе размеры которые указаны в массиве sizes
             // пример тут https://developer.mozilla.org/ru/docs/Learn/HTML/Multimedia_and_embedding/Responsive_images
             const generateSrcSetArr = sizes.map((size) => {
-                const path = `${this.pathToImg}/${size}/${this.filename}.${type}`;
+                // Для того чтобы картинки не постоянно кэшировались
+                const date = Date.now();
+                const path = `${this.pathToImg}/${size}/${this.filename}.${type}?v=${date}`;
 
                 return `${path} ${size}w`;
             });
