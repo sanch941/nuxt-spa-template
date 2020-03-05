@@ -5,8 +5,15 @@ const sharp = require('sharp');
 const mkdirp = require('mkdirp-promise');
 const async = require('async');
 const glob = require('glob');
+const imagemin = require('imagemin');
+const imageminPngquant = require('imagemin-pngquant');
 
 const isDefault = true;
+
+// у некоторых почему то не работает process.env.PWD
+if (!process.env.PWD) {
+    process.env.PWD = process.cwd();
+}
 
 const pathToImagesFolder = `${process.env.PWD}/static/images`;
 const pathToOptimizedImagesFolder = `${process.env.PWD}/static/images-opt`;
@@ -35,7 +42,7 @@ const resizeImages = async () => {
             nodir: true
         });
 
-        const filenamesSplitted = filenames.map((item) => {
+        const filenamesSplitted = filenames.map(item => {
             const type = path.extname(item);
             const typeWithoutDot = type.split('.').join('');
             const filename = path.basename(item, type);
@@ -56,7 +63,7 @@ const resizeImages = async () => {
                         // Превращаем full path в массив чтобы потом достать инлекс слэша images и взять все что после него и до названия файлы
                         const fullPathToArray = fullPath.split('/');
                         const findImagesSlashIdx = fullPathToArray.findIndex(
-                            (item) => item === 'images'
+                            item => item === 'images'
                         );
                         const nestedDirectories = fullPathToArray
                             .slice(
@@ -68,14 +75,41 @@ const resizeImages = async () => {
                         // Создает папку с номером ширины и подпапкой если есть
                         const widthDirectory = `${pathToOptimizedImagesFolder}/${width}/${nestedDirectories}`;
 
-                        const configure = (fileType) => {
+                        const configure = fileType => {
                             return new Promise((resolve2, reject2) => {
                                 const inputFile = fullPath;
                                 // sharp плохо сжимает png форматы, поэтому приходится менять png на jpg, автор sharp советует использовать Pngquant
                                 // но это доп зависимость и еще гора кода
-                                if (fileType === 'png') fileType = 'jpg';
 
                                 const outputFile = `${widthDirectory}/${filename}.${fileType}`;
+
+                                if (fileType === 'png') {
+                                    sharp(inputFile)
+                                        .resize(width, height)
+                                        .toFile(outputFile)
+                                        .then(async () => {
+                                            try {
+                                                await imagemin([outputFile], {
+                                                    // насчет path.dirname взял отсюда - https://stackoverflow.com/questions/53416803/overwriting-files-in-node-server
+                                                    destination: path.dirname(
+                                                        outputFile
+                                                    ),
+                                                    plugins: [
+                                                        imageminPngquant({
+                                                            quality: [0.6, 0.8]
+                                                        })
+                                                    ]
+                                                });
+
+                                                resolve2();
+                                            } catch (err) {
+                                                reject2(err);
+                                            }
+                                        })
+                                        .catch(err => reject2(err));
+
+                                    return;
+                                }
 
                                 if (fileType === 'webp') {
                                     sharp(inputFile)
@@ -85,7 +119,7 @@ const resizeImages = async () => {
                                         })
                                         .toFile(outputFile)
                                         .then(() => resolve2())
-                                        .catch((err) => reject2(err));
+                                        .catch(err => reject2(err));
 
                                     return;
                                 }
@@ -94,13 +128,12 @@ const resizeImages = async () => {
                                     .resize(width, height)
                                     .toFile(outputFile)
                                     .then(() => resolve2())
-                                    .catch((err) => reject2(err));
+                                    .catch(err => reject2(err));
                             });
                         };
 
                         mkdirp(widthDirectory).then(() => {
                             // path.extname убирает все что было до точки, оставляя только .jpg, .png. Документация - https://nodejs.org/api/path.html#path_path_extname_path
-
                             const allConfigured = [
                                 configure(type),
                                 configure('webp')
@@ -110,7 +143,7 @@ const resizeImages = async () => {
                                 .then(() => {
                                     resolve();
                                 })
-                                .catch((err) => {
+                                .catch(err => {
                                     reject(err);
                                 });
                         });
@@ -126,7 +159,7 @@ const resizeImages = async () => {
                     .then(() => {
                         passOver();
                     })
-                    .catch((err) => {
+                    .catch(err => {
                         passOver(err);
                     });
             }

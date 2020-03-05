@@ -1,20 +1,18 @@
 {
-    "editor.formatOnSave": true,
+    "editor.formatOnSave": false,
     "eslint.alwaysShowStatus": true,
-    "eslint.autoFixOnSave": true,
-    "eslint.packageManager": "yarn",
+    "eslint.packageManager": "npm",
     "eslint.validate": [
         "javascript",
         "javascriptreact",
-        {
-            "language": "vue",
-            "autoFix": true
-        }
+        "vue"
     ],
     "[vue]": {
-        "editor.formatOnSave": false
+        "editor.formatOnSave": true
     },
+    "css.validate": false,
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": true
-    }
+    },
+    "eslint.enable": true
 }

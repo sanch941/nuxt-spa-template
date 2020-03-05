@@ -1,3 +1,7 @@
 .all-full {
     @apply h-full w-full;
 }
+
+.absolute-l-t {
+    @apply absolute top-0 left-0;
+}

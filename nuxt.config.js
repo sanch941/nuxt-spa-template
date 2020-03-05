@@ -1,3 +1,6 @@
+import { config } from 'dotenv';
+config();
+
 export default {
     mode: 'spa',
     /*
@@ -48,6 +51,7 @@ export default {
         configPath: '~/tailwind/tailwind.config.js',
         cssPath: '~/assets/css/tailwind.css'
     },
+    purgeCSS: {},
     /*
      ** Nuxt.js modules
      */
@@ -70,7 +74,7 @@ export default {
         }
     },
     env: {
-        dev: process.env.NODE_ENV === 'development'
-    },
-    purgeCSS: {}
+        dev: process.env.NODE_ENV === 'development',
+        appVersion: process.env.APP_VERSION
+    }
 };

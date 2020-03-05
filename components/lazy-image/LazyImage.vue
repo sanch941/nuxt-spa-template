@@ -1,23 +1,24 @@
 <template>
-    <div class="all-full overflow-hidden">
+    <div class="all-full relative overflow-hidden">
         <!-- Порядок загрузки : серый фон => картинка низкого качества => оригинал -->
-        <!-- Состояние при загрузке -->
-        <div v-show="!isTinyLoaded" class="all-full relative">
+        <!-- Состояние - серый фон, можно добавить кастомную загрузку если type поменять на custom -->
+        <div v-show="!isTinyLoaded" class="all-full absolute-l-t z-20">
             <div v-if="type === 'default'" class="all-full bg-main-gray" />
             <slot v-else-if="type === 'custom'" />
         </div>
 
         <!-- Состояние после загрузки -->
         <!-- invisible это класс tailwind -->
-        <div class="all-full relative">
+        <div class="all-full relative z-10">
             <img
                 :class="[
-                    'all-full tiny lazy-image object-fit-polyfill',
+                    'all-full tiny absolute-l-t object-fit-polyfill',
                     { invisible: isOriginalLoaded }
                 ]"
                 :src="tinyImgSrc"
                 @load="tinyLoaded"
             />
+
             <picture>
                 <source
                     type="image/webp"
@@ -39,7 +40,7 @@
 </template>
 
 <script>
-import { basename } from '../../util/basename';
+import { basename } from '../../utils/basename';
 
 const sizes = [640, 768, 1024, 1366, 1600, 1920];
 
@@ -68,11 +69,12 @@ export default {
     },
     computed: {
         dev() {
-            // process.env.dev указан в nuxt config js, проверяю код на development или продакш, дополняю еще одну переменную
+            // process.env.dev указан в nuxt config js, проверяю код на development или продакшн, дополняю еще одну переменную
             // для того чтобы имитировать продакшн
             return !!(process.env.dev && !this.fakeProduction);
         },
         pathToImg() {
+            // иначе взять локальные данные
             return this.dev ? 'images' : 'images-opt';
         },
         tinyImgSrc() {
@@ -83,6 +85,7 @@ export default {
         originalImgSrc() {
             return `images/${this.url}`;
         },
+        // название файла
         filename() {
             return basename(this.url);
         },
@@ -93,13 +96,15 @@ export default {
         // Набор классов для картинов внутри picture, вывел отдельно так как они повторяются
         originalImgClasses() {
             return [
-                `all-full lazy-image object-fit-polyfill 
-                    transition-original-image opacity-0`,
+                `all-full object-fit-polyfill 
+                transition-original-image opacity-0`,
                 { 'opacity-100': this.isOriginalLoaded }
             ];
         }
     },
-    mounted() {},
+    mounted() {
+        throw new Error('error');
+    },
     methods: {
         tinyLoaded() {
             this.isTinyLoaded = true;
@@ -114,10 +119,10 @@ export default {
 
             // srcset должен быть динамичным и держать себе размеры которые указаны в массиве sizes
             // пример тут https://developer.mozilla.org/ru/docs/Learn/HTML/Multimedia_and_embedding/Responsive_images
-            const generateSrcSetArr = sizes.map((size) => {
-                // Для того чтобы картинки не постоянно кэшировались
-                const date = Date.now();
-                const path = `${this.pathToImg}/${size}/${this.filename}.${type}?v=${date}`;
+            const generateSrcSetArr = sizes.map(size => {
+                // Для того чтобы картинки не кэшировались
+                const version = process.env.appVersion;
+                const path = `${this.pathToImg}/${size}/${this.filename}.${type}?v=${version}`;
 
                 return `${path} ${size}w`;
             });
