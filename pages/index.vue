@@ -1,7 +1,7 @@
 <template>
     <div>
         <div style>
-            <LazyImage url="original.jpg" />
+            <LazyImage url="test.png" type="img" />
         </div>
     </div>
 </template>

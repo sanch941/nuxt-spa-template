@@ -15,21 +15,21 @@ if (!process.env.PWD) {
     process.env.PWD = process.cwd();
 }
 
-const pathToImagesFolder = `${process.env.PWD}/static/images`;
-const pathToOptimizedImagesFolder = `${process.env.PWD}/static/images-opt`;
+const pathToImagesFolder = `${process.env.PWD}/static/images-bg`;
+const pathToOptimizedImagesFolder = `${process.env.PWD}/static/images-bg-optimized`;
 
 const globPromise = promisify(glob);
 
 // 1 параметр - ширина, 2 параметр - высота
-const sizesDefault = [[1920], [1600], [1366], [1024], [768], [640], [100]];
+const sizesDefault = [[1920], [1600], [1366], [1024], [720], [360], [100]];
 
 const sizesOptional = [
     [1920, 1080],
     [1600, 900],
     [1366, 768],
     [1024, 768],
-    [768],
-    [640],
+    [720],
+    [360],
     [100]
 ];
 
@@ -38,9 +38,12 @@ const sizes = isDefault ? sizesDefault : sizesOptional;
 const resizeImages = async () => {
     try {
         // Взять из папки все файлы, включая подпапки
-        const filenames = await globPromise(`${pathToImagesFolder}/**/*`, {
-            nodir: true
-        });
+        const filenames = await globPromise(
+            `${pathToImagesFolder}/**/*.{png,jpg,webp}`,
+            {
+                nodir: true
+            }
+        );
 
         const filenamesSplitted = filenames.map(item => {
             const type = path.extname(item);
@@ -63,7 +66,7 @@ const resizeImages = async () => {
                         // Превращаем full path в массив чтобы потом достать инлекс слэша images и взять все что после него и до названия файлы
                         const fullPathToArray = fullPath.split('/');
                         const findImagesSlashIdx = fullPathToArray.findIndex(
-                            item => item === 'images'
+                            item => item === 'images-bg'
                         );
                         const nestedDirectories = fullPathToArray
                             .slice(

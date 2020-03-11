@@ -80,7 +80,8 @@ export default {
     },
     env: {
         dev: process.env.NODE_ENV === 'development',
-        appVersion: process.env.APP_VERSION
+        appVersion: process.env.APP_VERSION,
+        fakeProduction: process.env.FAKE_PRODUCTION
     },
     extend(config, ctx) {
         if (!ctx.isDev) {

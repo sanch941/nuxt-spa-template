@@ -91,4 +91,5 @@ sw.*
 # Vim swap files
 *.swp
 
-static/images-opt
+static/images-bg-optimized
+static/images-normal-optimized

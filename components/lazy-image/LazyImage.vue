@@ -3,8 +3,8 @@
         <!-- Порядок загрузки : серый фон => картинка низкого качества => оригинал -->
         <!-- Состояние - серый фон, можно добавить кастомную загрузку если type поменять на custom -->
         <div v-show="!isTinyLoaded" class="all-full absolute-l-t z-20">
-            <div v-if="type === 'default'" class="all-full bg-main-gray" />
-            <slot v-else-if="type === 'custom'" />
+            <div v-if="loader === 'default'" class="all-full bg-main-gray" />
+            <slot v-else-if="loader === 'custom'" />
         </div>
 
         <!-- Состояние после загрузки -->
@@ -27,10 +27,15 @@
                     v-bind="otherProps"
                     @load="originalLoaded"
                 />
+                <source
+                    :class="originalImgClasses"
+                    :srcset="originalImgSrcset(filetype)"
+                    v-bind="otherProps"
+                    @load="originalLoaded"
+                />
                 <img
                     :class="originalImgClasses"
                     :src="originalImgSrc"
-                    :srcset="originalImgSrcset(filetype)"
                     v-bind="otherProps"
                     @load="originalLoaded"
                 />
@@ -42,17 +47,19 @@
 <script>
 import { basename } from '../../utils/basename';
 
-const sizes = [640, 768, 1024, 1366, 1600, 1920];
-
 export default {
     props: {
         url: {
             type: String,
             required: true
         },
-        type: {
+        loader: {
             type: String,
             default: 'default'
+        },
+        type: {
+            type: String,
+            default: 'img'
         },
         otherProps: {
             type: Object,
@@ -62,20 +69,33 @@ export default {
     data() {
         return {
             isTinyLoaded: false,
-            isOriginalLoaded: false,
-            // имитация продакшн
-            fakeProduction: true
+            isOriginalLoaded: false
         };
     },
     computed: {
         dev() {
             // process.env.dev указан в nuxt config js, проверяю код на development или продакшн, дополняю еще одну переменную
             // для того чтобы имитировать продакшн
-            return !!(process.env.dev && !this.fakeProduction);
+            return !!(process.env.dev && !process.env.fakeProduction);
+        },
+        isTypeImg() {
+            return this.type === 'img';
+        },
+        sizes() {
+            const sizesBg = [320, 720, 1024, 1366, 1600, 1920];
+            const sizesNormal = [360, 720, 'normal'];
+
+            return this.isTypeImg ? sizesNormal : sizesBg;
         },
         pathToImg() {
             // иначе взять локальные данные
-            return this.dev ? 'images' : 'images-opt';
+            if (this.dev) {
+                return this.isTypeImg ? 'images-normal' : 'images-bg';
+            }
+
+            return this.isTypeImg
+                ? 'images-normal-optimized'
+                : 'images-bg-optimized';
         },
         tinyImgSrc() {
             return this.dev
@@ -83,7 +103,11 @@ export default {
                 : `${this.pathToImg}/100/${this.url}`;
         },
         originalImgSrc() {
-            return `images/${this.url}`;
+            const version = process.env.appVersion;
+
+            return this.isTypeImg
+                ? `images-normal/${this.url}?v=${version}`
+                : `images-bg/${this.url}?v=${version}`;
         },
         // название файла
         filename() {
@@ -96,8 +120,7 @@ export default {
         // Набор классов для картинов внутри picture, вывел отдельно так как они повторяются
         originalImgClasses() {
             return [
-                `all-full object-fit-polyfill 
-                transition-original-image opacity-0`,
+                `all-full object-fit-polyfill transition-original-image opacity-0`,
                 { 'opacity-100': this.isOriginalLoaded }
             ];
         }
@@ -116,10 +139,12 @@ export default {
 
             // srcset должен быть динамичным и держать себе размеры которые указаны в массиве sizes
             // пример тут https://developer.mozilla.org/ru/docs/Learn/HTML/Multimedia_and_embedding/Responsive_images
-            const generateSrcSetArr = sizes.map(size => {
+            const generateSrcSetArr = this.sizes.map(size => {
                 // Для того чтобы картинки не кэшировались
+
                 const version = process.env.appVersion;
                 const path = `${this.pathToImg}/${size}/${this.filename}.${type}?v=${version}`;
+                if (size === 'normal') size = 1024;
 
                 return `${path} ${size}w`;
             });
@@ -135,13 +160,9 @@ export default {
     transition: opacity 400ms ease 0ms;
 }
 
-.lazy-image {
-    @apply absolute top-0 left-0;
-}
-
 .tiny {
-    filter: blur(20px);
-    transform: scale(1.1);
+    filter: blur(5px);
+    transform: scale(1);
     transition: visibility 0ms ease 400ms;
 }
 </style>
