@@ -102,9 +102,6 @@ export default {
             ];
         }
     },
-    mounted() {
-        throw new Error('error');
-    },
     methods: {
         tinyLoaded() {
             this.isTinyLoaded = true;

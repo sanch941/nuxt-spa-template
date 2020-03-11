@@ -1,3 +1,4 @@
+import path from 'path';
 import { config } from 'dotenv';
 config();
 
@@ -29,7 +30,7 @@ export default {
     /*
      ** Global CSS
      */
-    css: [],
+    css: ['~assets/css/tailwind.css'],
     /*
      ** Plugins to load before mounting the App
      */
@@ -43,15 +44,9 @@ export default {
      */
     buildModules: [
         // Doc: https://github.com/nuxt-community/eslint-module
-        '@nuxtjs/eslint-module',
+        '@nuxtjs/eslint-module'
         // Doc: https://github.com/nuxt-community/nuxt-tailwindcss
-        '@nuxtjs/tailwindcss'
     ],
-    tailwindcss: {
-        configPath: '~/tailwind/tailwind.config.js',
-        cssPath: '~/assets/css/tailwind.css'
-    },
-    purgeCSS: {},
     /*
      ** Nuxt.js modules
      */
@@ -69,6 +64,18 @@ export default {
                 autoprefixer: {},
                 'postcss-preset-env': {
                     stage: 1
+                },
+                tailwindcss: path.resolve(
+                    __dirname,
+                    './tailwind/tailwind.config.js'
+                ),
+                '@fullhuman/postcss-purgecss': {
+                    content: [
+                        './pages/**/*.vue',
+                        './layouts/**/*.vue',
+                        './components/**/*.vue'
+                    ],
+                    whitelist: ['html', 'body']
                 }
             }
         }

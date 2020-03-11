@@ -20,12 +20,12 @@
 
 /* Сторонние библиотеки */
 
-@import './tui-styles/codemirror';
-
-@import './tui-styles/github.min';
-
 @import './fontawesome/css/all.min';
 
-@import 'tui-editor/dist/tui-editor.min.css';
+/* @import './tui-styles/codemirror';
 
-@import 'tui-editor/dist/tui-editor-contents.min.css';
+@import './tui-styles/github.min'; */
+
+/* @import 'tui-editor/dist/tui-editor.min.css';
+
+@import 'tui-editor/dist/tui-editor-contents.min.css'; */
