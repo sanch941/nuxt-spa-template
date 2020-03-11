@@ -1,6 +1,6 @@
 <template>
     <div>
-        <div style="height: 300px; width: 300px">
+        <div style>
             <LazyImage url="original.jpg" />
         </div>
     </div>

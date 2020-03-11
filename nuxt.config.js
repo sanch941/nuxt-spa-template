@@ -1,5 +1,11 @@
 import path from 'path';
 import { config } from 'dotenv';
+import PurgecssPlugin from 'purgecss-webpack-plugin';
+import postcssImport from 'postcss-import';
+import postcssPresetEnv from 'postcss-preset-env';
+import tailwindCss from 'tailwindcss';
+import autoPrefixer from 'autoprefixer';
+import doesNothing from './plugins/postcss-does-nothing';
 config();
 
 export default {
@@ -55,33 +61,49 @@ export default {
      ** Build configuration
      */
     build: {
+        extractCSS: true,
         /*
          ** You can extend webpack config here
          */
         postcss: {
-            plugins: {
-                'postcss-import': {},
-                autoprefixer: {},
-                'postcss-preset-env': {
-                    stage: 1
-                },
-                tailwindcss: path.resolve(
-                    __dirname,
-                    './tailwind/tailwind.config.js'
+            plugins: [
+                postcssImport(),
+                postcssPresetEnv({ stage: 1 }),
+                tailwindCss(
+                    path.resolve(__dirname, './tailwind/tailwind.config.js')
                 ),
-                '@fullhuman/postcss-purgecss': {
-                    content: [
-                        './pages/**/*.vue',
-                        './layouts/**/*.vue',
-                        './components/**/*.vue'
-                    ],
-                    whitelist: ['html', 'body']
-                }
-            }
+                process.env.NODE_ENV === 'production'
+                    ? autoPrefixer()
+                    : doesNothing()
+            ]
         }
     },
     env: {
         dev: process.env.NODE_ENV === 'development',
         appVersion: process.env.APP_VERSION
+    },
+    extend(config, ctx) {
+        if (!ctx.isDev) {
+            config.plugins.push(
+                new PurgecssPlugin({
+                    paths: [
+                        'components/**/*.vue',
+                        'layouts/**/*.vue',
+                        'pages/**/*.vue',
+                        'plugins/**/*.js'
+                    ],
+                    styleExtensions: ['.css'],
+                    whitelist: ['body', 'html', 'nuxt-progress'],
+                    extractors: [
+                        {
+                            extractor(content) {
+                                return content.match(/[\w-.:/]+(?<!:)/g);
+                            },
+                            extensions: ['html', 'vue', 'js']
+                        }
+                    ]
+                })
+            );
+        }
     }
 };
